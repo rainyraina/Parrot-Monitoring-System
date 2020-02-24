@@ -1,0 +1,13 @@
+1. Set up Water Monitoring Station and Food Monitoring Station as shown in the Fritzing diagrams
+
+2. Collect aws credentials and add into .aws/credentials for raspberry pi and EC2  
+
+3. Run WMS.py WMS2.py on Water Monitoring Station 
+
+4. Run FMS.py and FMS2.py on Food Monitoring Station 
+
+5. On EC2 in app directory, run Server.py 
+
+6. Browse to ec2-3-86-16-93.compute-1.amazonaws.com:5000 for the webapplication 
+
+7. Or go to 192.168.1.59:5000 for local host and not running on EC2 

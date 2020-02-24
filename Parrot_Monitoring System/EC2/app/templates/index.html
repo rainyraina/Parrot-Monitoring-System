@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="Content-Language" content="en">
+
+    <title>Analytics Dashboard - This is an example dashboard created using build-in elements and components.</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no">
+    <meta name="description" content="This is an example dashboard created using build-in elements and components.">
+    <meta name="msapplication-tap-highlight" content="no">
+<link href="./static/main.css" rel="stylesheet"><style type="text/css">/* Chart.js */
+@-webkit-keyframes chartjs-render-animation{from{opacity:0.99}to{opacity:1}}@keyframes chartjs-render-animation{from{opacity:0.99}to{opacity:1}}.chartjs-render-monitor{-webkit-animation:chartjs-render-animation 0.001s;animation:chartjs-render-animation 0.001s;}</style>
+<!--<script type="text/javascript" charset="UTF-8" src="./static/common.js.download"></script>
+<script type="text/javascript" charset="UTF-8" src="./static/util.js.download"></script> -->
+<!--<script src="/static/sensor.js"></script> -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+<script>
+  function live(){
+	WMS()
+	FMS()
+	updatefeed()
+	updaterefill()
+	alert()
+	updatefeed()
+	setTimeout(live,20000);
+  };
+</script>
+<script>
+function WMS(){
+    $.post("/api/WMSsensors",
+    function(newdata,status){
+		var tdslist = [];
+		var datetimelist= [];
+		var watertemplist =[]
+		var deviceidlist = []
+		var waterlevellist = []
+		// Adding the data in the rows
+		var newdata = JSON.parse(newdata);
+		for (i in newdata) {
+			datetime = newdata[i].datetime;
+			datetime = datetime.substring(0, 19) 
+			jsdatetime = new Date(Date.parse(datetime));
+			jstime = jsdatetime.toLocaleTimeString();
+			tdsvalue = (newdata[i].TDS)
+			waterlevel = (newdata[i].WaterLevel)
+			watertemp = (newdata[i].WaterTemp)
+			datetimelist.push(jstime);
+			tdslist.push(tdsvalue);
+			waterlevellist.push(waterlevel)
+			watertemplist.push(watertemp)
+			}
+		var latesttds = tdslist[tdslist.length - 1];
+		var latestwaterlevel = waterlevellist[waterlevellist.length - 1];
+		var latestwatertemp = watertemplist[watertemplist.length - 1];
+		var latesttime = datetimelist[datetimelist.length - 1];
+		document.getElementById("TDS").innerHTML=latesttds +" TDS";
+		document.getElementById("PH").innerHTML=latestwaterlevel+" cm";
+		document.getElementById("Time").innerHTML=latesttime;
+		document.getElementById("Temp").innerHTML=latestwatertemp+" °C";
+
+		
+		var ctx = document.getElementById('canvas3').getContext('2d');
+		var myLineChart = new Chart(ctx, {
+		type: 'line',
+		data: {
+			labels: datetimelist,
+			datasets: [{
+            			label: 'TDS over time',
+            			data: tdslist,
+						"fill": false,
+						"borderColor":"rgb(5, 96, 161)",
+        			}],
+
+		},
+		}
+		)
+		
+		var ctx = document.getElementById('canvas1').getContext('2d');
+		var myLineChart = new Chart(ctx, {
+		type: 'line',
+		data: {
+			labels: datetimelist,
+			datasets: [{
+            			label: 'Temperature over time',
+            			data: watertemplist,
+						"fill": false,
+						"borderColor":"rgb(5, 96, 161)",
+        			}],
+
+		},
+		}
+		)
+		
+		var ctx = document.getElementById('canvas2').getContext('2d');
+		var myLineChart = new Chart(ctx, {
+		type: 'line',
+		data: {
+			labels: datetimelist,
+			datasets: [{
+            			label: 'WaterLevel over time',
+            			data: waterlevellist,
+						"fill": false,
+						"borderColor":"rgb(5, 96, 161)",
+        			}],
+
+		},
+		}
+		)
+		
+    }
+	);
+  };  
+</script>
+<script>
+function FMS(){
+    $.post("/api/FMSsensors",
+    function(newdata,status){
+		var AHlist = [];
+		var datetimelist= [];
+		var deviceidlist = []
+		var ATlist = []
+		// Adding the data in the rows
+		var newdata = JSON.parse(newdata);
+		for (i in newdata) {
+			datetime = newdata[i].datetime;
+			datetime = datetime.substring(0, 19) 
+			jsdatetime = new Date(Date.parse(datetime));
+			jstime = jsdatetime.toLocaleTimeString();
+			AH = (newdata[i].AH)
+			AT = (newdata[i].AT)
+			datetimelist.push(jstime);
+			AHlist.push(AH);
+			ATlist.push(AT)
+			}
+			
+		var latestat = ATlist[ATlist.length - 1];
+		var latestah = AHlist[AHlist.length - 1];
+		document.getElementById("AT").innerHTML=latestat +" °C";
+		document.getElementById("AH").innerHTML=latestah+" RH";	
+		
+		var ctx = document.getElementById('canvas4').getContext('2d');
+		var myLineChart = new Chart(ctx, {
+		type: 'line',
+		data: {
+			labels: datetimelist,
+			datasets: [{
+            			label: 'Ambient Temperature over time',
+            			data: ATlist,
+						"fill": false,
+						"borderColor":"rgb(5, 96, 161)",
+        			}],
+
+		},
+		}
+		)
+		
+		var ctx = document.getElementById('canvas5').getContext('2d');
+		var myLineChart = new Chart(ctx, {
+		type: 'line',
+		data: {
+			labels: datetimelist,
+			datasets: [{
+            			label: 'Ambient Humidity over time',
+            			data: AHlist,
+						"fill": false,
+						"borderColor":"rgb(5, 96, 161)",
+        			}],
+
+		},
+		}
+		)
+		
+
+    }
+	);
+  };  
+</script>
+<script>
+function feed(){
+	$.post("/api/feed",
+	function(data,status){
+	if (data=== "feed"){
+	document.getElementById("feed").innerHTML="Fed";
+	}
+	});
+	setTimeout(updatefeed,3000)
+ };
+</script>
+<script>
+	function updatefeed(){
+	$.post("/api/updatefeed",
+	function(data,status){
+		var newdata = JSON.parse(data);
+		var datetime = newdata[newdata.length - 1].datetime;
+		datetime = datetime.substring(0, 19) 
+		jsdatetime = new Date(Date.parse(datetime));
+		jstime = jsdatetime.toLocaleTimeString();
+		document.getElementById("updatefeed").innerHTML=jstime;
+		console.log(jstime);
+	});
+ };
+</script>
+<script>
+function refill(){
+	var number=document.getElementById("value").value; 
+	const regex = RegExp('[0-9]');
+	if (regex.test(number) === true){
+		$.get('/api/refill', {value: number}, 
+			function(returnedData){
+				 console.log(returnedData);
+		});
+		setTimeout(updaterefill,3000)
+		}
+	else {
+		alert("Please enter a single digit");
+	}
+ };
+</script>
+<script>
+	function updaterefill(){
+	$.post("/api/updaterefill",
+	function(data,status){
+		var newdata = JSON.parse(data);
+		var refill = newdata[newdata.length - 1].refill;
+		var datetime = newdata[newdata.length - 1].datetime;
+		datetime = datetime.substring(0, 19) 
+		jsdatetime = new Date(Date.parse(datetime));
+		jstime = jsdatetime.toLocaleTimeString();
+		document.getElementById("lastrefill").innerHTML=jstime;
+	});
+ };
+</script>
+<script>
+	function alert(){
+	$.post("/api/latestphoto",
+	function(anomaly,status){
+		var date = anomaly.datetime
+		datetime = date.substring(0, 19) 
+		jsdatetime = new Date(Date.parse(datetime));
+		jstime = jsdatetime.toLocaleTimeString();
+		document.getElementById("anomalytext").innerHTML = "Detected: "+anomaly.label + " Confidence: " + anomaly.confidence;
+		//document.getElementById("anomalytext2").innerHTML = anomaly.filename;
+		document.getElementById("anomalydate").innerHTML = jstime;
+		document.getElementById("image").src="data:image/jpeg;base64,"+anomaly.image;
+    });
+  };
+</script>
+
+</head>
+<body onload="live()">
+    <div class="app-container app-theme-white body-tabs-shadow fixed-sidebar fixed-header closed-sidebar-mobile closed-sidebar">
+        <div class="app-header header-shadow">
+            <div class="app-header__logo">
+                <div class="logo-src"></div>
+                <div class="header__pane ml-auto">
+                    <div>
+                        <button type="button" class="hamburger close-sidebar-btn hamburger--elastic" data-class="closed-sidebar">
+                            <span class="hamburger-box">
+                                <span class="hamburger-inner"></span>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="app-header__mobile-menu">
+                <div>
+                    <button type="button" class="hamburger hamburger--elastic mobile-toggle-nav">
+                        <span class="hamburger-box">
+                            <span class="hamburger-inner"></span>
+                        </span>
+                    </button>
+                </div>
+            </div>
+            <div class="app-header__menu">
+                <span>
+                    <button type="button" class="btn-icon btn-icon-only btn btn-primary btn-sm mobile-toggle-header-nav">
+                        <span class="btn-icon-wrapper">
+                            <i class="fa fa-ellipsis-v fa-w-6"></i>
+                        </span>
+                    </button>
+                </span>
+            </div>    <div class="app-header__content">
+                <div class="app-header-left">
+                    <div class="search-wrapper">
+                        <div class="input-holder">
+                            <input type="text" class="search-input" placeholder="Type to search">
+                            <button class="search-icon"><span></span></button>
+                        </div>
+                        <button class="close"></button>
+                    </div>
+                    <ul class="header-menu nav">
+					<button type="button" class="btn btn-success" id="update" onclick="live()" hidden='hidden' >Update</button>
+					<h6 id="status"> </h6>
+                    </ul>        
+					</div>
+                <div class="app-header-right">
+                    <div class="header-btn-lg pr-0">
+                        <div class="widget-content p-0">
+                            <div class="widget-content-wrapper">
+                                <div class="widget-content-left">
+                                    <div class="btn-group">
+                                        <a data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="p-0 btn">
+                                            <img width="42" class="rounded-circle" src="./static/assets/images/avatars/1.jpg" alt="">
+                                            <i class="fa fa-angle-down ml-2 opacity-8"></i>
+                                        </a>
+                                        <div tabindex="-1" role="menu" aria-hidden="true" class="dropdown-menu dropdown-menu-right">
+                                            <button type="button" tabindex="0" class="dropdown-item">User Account</button>
+                                            <button type="button" tabindex="0" class="dropdown-item">Settings</button>
+                                            <h6 tabindex="-1" class="dropdown-header">Header</h6>
+                                            <button type="button" tabindex="0" class="dropdown-item">Actions</button>
+                                            <div tabindex="-1" class="dropdown-divider"></div>
+                                            <button type="button" tabindex="0" class="dropdown-item">Dividers</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="widget-content-left  ml-3 header-user-info">
+                                    <div class="widget-heading">
+                                        Kenneth Lee
+                                    </div>
+                                    <div class="widget-subheading">
+                                        Water Monitor
+                                    </div>
+                                </div>
+                                <div class="widget-content-right header-user-info ml-3">
+                                    <button type="button" class="btn-shadow p-1 btn btn-primary btn-sm show-toastr-example">
+                                        <i class="fa text-white fa-calendar pr-1 pl-1"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>        </div>
+            </div>
+        </div>        <div class="ui-theme-settings">
+            <button type="button" id="TooltipDemo" class="btn-open-options btn btn-warning">
+                <i class="fa fa-cog fa-w-16 fa-spin fa-2x"></i>
+            </button>
+            <div class="theme-settings__inner">
+                <div class="scrollbar-container ps ps--active-y">
+                    <div class="theme-settings__options-wrapper">
+                        <h3 class="themeoptions-heading">Layout Options
+                        </h3>
+                        <div class="p-3">
+                            <ul class="list-group">
+                                <li class="list-group-item">
+                                    <div class="widget-content p-0">
+                                        <div class="widget-content-wrapper">
+                                            <div class="widget-content-left mr-3">
+                                                <div class="switch has-switch switch-container-class" data-class="fixed-header">
+                                                    <div class="switch-animate switch-on">
+                                                        <input type="checkbox" checked="" data-toggle="toggle" data-onstyle="success">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="widget-content-left">
+                                                <div class="widget-heading">Fixed Header
+                                                </div>
+                                                <div class="widget-subheading">Makes the header top fixed, always visible!
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li class="list-group-item">
+                                    <div class="widget-content p-0">
+                                        <div class="widget-content-wrapper">
+                                            <div class="widget-content-left mr-3">
+                                                <div class="switch has-switch switch-container-class" data-class="fixed-sidebar">
+                                                    <div class="switch-animate switch-on">
+                                                        <input type="checkbox" checked="" data-toggle="toggle" data-onstyle="success">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="widget-content-left">
+                                                <div class="widget-heading">Fixed Sidebar
+                                                </div>
+                                                <div class="widget-subheading">Makes the sidebar left fixed, always visible!
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li class="list-group-item">
+                                    <div class="widget-content p-0">
+                                        <div class="widget-content-wrapper">
+                                            <div class="widget-content-left mr-3">
+                                                <div class="switch has-switch switch-container-class" data-class="fixed-footer">
+                                                    <div class="switch-animate switch-off">
+                                                        <input type="checkbox" data-toggle="toggle" data-onstyle="success">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="widget-content-left">
+                                                <div class="widget-heading">Fixed Footer
+                                                </div>
+                                                <div class="widget-subheading">Makes the app footer bottom fixed, always visible!
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                        <h3 class="themeoptions-heading">
+                            <div>
+                                Header Options
+                            </div>
+                            <button type="button" class="btn-pill btn-shadow btn-wide ml-auto btn btn-focus btn-sm switch-header-cs-class" data-class="">
+                                Restore Default
+                            </button>
+                        </h3>
+                        <div class="p-3">
+                            <ul class="list-group">
+                                <li class="list-group-item">
+                                    <h5 class="pb-2">Choose Color Scheme
+                                    </h5>
+                                    <div class="theme-settings-swatches">
+                                        <div class="swatch-holder bg-primary switch-header-cs-class" data-class="bg-primary header-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-secondary switch-header-cs-class" data-class="bg-secondary header-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-success switch-header-cs-class" data-class="bg-success header-text-dark">
+                                        </div>
+                                        <div class="swatch-holder bg-info switch-header-cs-class" data-class="bg-info header-text-dark">
+                                        </div>
+                                        <div class="swatch-holder bg-warning switch-header-cs-class" data-class="bg-warning header-text-dark">
+                                        </div>
+                                        <div class="swatch-holder bg-danger switch-header-cs-class" data-class="bg-danger header-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-light switch-header-cs-class" data-class="bg-light header-text-dark">
+                                        </div>
+                                        <div class="swatch-holder bg-dark switch-header-cs-class" data-class="bg-dark header-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-focus switch-header-cs-class" data-class="bg-focus header-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-alternate switch-header-cs-class" data-class="bg-alternate header-text-light">
+                                        </div>
+                                        <div class="divider">
+                                        </div>
+                                        <div class="swatch-holder bg-vicious-stance switch-header-cs-class" data-class="bg-vicious-stance header-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-midnight-bloom switch-header-cs-class" data-class="bg-midnight-bloom header-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-night-sky switch-header-cs-class" data-class="bg-night-sky header-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-slick-carbon switch-header-cs-class" data-class="bg-slick-carbon header-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-asteroid switch-header-cs-class" data-class="bg-asteroid header-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-royal switch-header-cs-class" data-class="bg-royal header-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-warm-flame switch-header-cs-class" data-class="bg-warm-flame header-text-dark">
+                                        </div>
+                                        <div class="swatch-holder bg-night-fade switch-header-cs-class" data-class="bg-night-fade header-text-dark">
+                                        </div>
+                                        <div class="swatch-holder bg-sunny-morning switch-header-cs-class" data-class="bg-sunny-morning header-text-dark">
+                                        </div>
+                                        <div class="swatch-holder bg-tempting-azure switch-header-cs-class" data-class="bg-tempting-azure header-text-dark">
+                                        </div>
+                                        <div class="swatch-holder bg-amy-crisp switch-header-cs-class" data-class="bg-amy-crisp header-text-dark">
+                                        </div>
+                                        <div class="swatch-holder bg-heavy-rain switch-header-cs-class" data-class="bg-heavy-rain header-text-dark">
+                                        </div>
+                                        <div class="swatch-holder bg-mean-fruit switch-header-cs-class" data-class="bg-mean-fruit header-text-dark">
+                                        </div>
+                                        <div class="swatch-holder bg-malibu-beach switch-header-cs-class" data-class="bg-malibu-beach header-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-deep-blue switch-header-cs-class" data-class="bg-deep-blue header-text-dark">
+                                        </div>
+                                        <div class="swatch-holder bg-ripe-malin switch-header-cs-class" data-class="bg-ripe-malin header-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-arielle-smile switch-header-cs-class" data-class="bg-arielle-smile header-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-plum-plate switch-header-cs-class" data-class="bg-plum-plate header-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-happy-fisher switch-header-cs-class" data-class="bg-happy-fisher header-text-dark">
+                                        </div>
+                                        <div class="swatch-holder bg-happy-itmeo switch-header-cs-class" data-class="bg-happy-itmeo header-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-mixed-hopes switch-header-cs-class" data-class="bg-mixed-hopes header-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-strong-bliss switch-header-cs-class" data-class="bg-strong-bliss header-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-grow-early switch-header-cs-class" data-class="bg-grow-early header-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-love-kiss switch-header-cs-class" data-class="bg-love-kiss header-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-premium-dark switch-header-cs-class" data-class="bg-premium-dark header-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-happy-green switch-header-cs-class" data-class="bg-happy-green header-text-light">
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                        <h3 class="themeoptions-heading">
+                            <div>Sidebar Options</div>
+                            <button type="button" class="btn-pill btn-shadow btn-wide ml-auto btn btn-focus btn-sm switch-sidebar-cs-class" data-class="">
+                                Restore Default
+                            </button>
+                        </h3>
+                        <div class="p-3">
+                            <ul class="list-group">
+                                <li class="list-group-item">
+                                    <h5 class="pb-2">Choose Color Scheme
+                                    </h5>
+                                    <div class="theme-settings-swatches">
+                                        <div class="swatch-holder bg-primary switch-sidebar-cs-class" data-class="bg-primary sidebar-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-secondary switch-sidebar-cs-class" data-class="bg-secondary sidebar-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-success switch-sidebar-cs-class" data-class="bg-success sidebar-text-dark">
+                                        </div>
+                                        <div class="swatch-holder bg-info switch-sidebar-cs-class" data-class="bg-info sidebar-text-dark">
+                                        </div>
+                                        <div class="swatch-holder bg-warning switch-sidebar-cs-class" data-class="bg-warning sidebar-text-dark">
+                                        </div>
+                                        <div class="swatch-holder bg-danger switch-sidebar-cs-class" data-class="bg-danger sidebar-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-light switch-sidebar-cs-class" data-class="bg-light sidebar-text-dark">
+                                        </div>
+                                        <div class="swatch-holder bg-dark switch-sidebar-cs-class" data-class="bg-dark sidebar-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-focus switch-sidebar-cs-class" data-class="bg-focus sidebar-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-alternate switch-sidebar-cs-class" data-class="bg-alternate sidebar-text-light">
+                                        </div>
+                                        <div class="divider">
+                                        </div>
+                                        <div class="swatch-holder bg-vicious-stance switch-sidebar-cs-class" data-class="bg-vicious-stance sidebar-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-midnight-bloom switch-sidebar-cs-class" data-class="bg-midnight-bloom sidebar-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-night-sky switch-sidebar-cs-class" data-class="bg-night-sky sidebar-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-slick-carbon switch-sidebar-cs-class" data-class="bg-slick-carbon sidebar-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-asteroid switch-sidebar-cs-class" data-class="bg-asteroid sidebar-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-royal switch-sidebar-cs-class" data-class="bg-royal sidebar-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-warm-flame switch-sidebar-cs-class" data-class="bg-warm-flame sidebar-text-dark">
+                                        </div>
+                                        <div class="swatch-holder bg-night-fade switch-sidebar-cs-class" data-class="bg-night-fade sidebar-text-dark">
+                                        </div>
+                                        <div class="swatch-holder bg-sunny-morning switch-sidebar-cs-class" data-class="bg-sunny-morning sidebar-text-dark">
+                                        </div>
+                                        <div class="swatch-holder bg-tempting-azure switch-sidebar-cs-class" data-class="bg-tempting-azure sidebar-text-dark">
+                                        </div>
+                                        <div class="swatch-holder bg-amy-crisp switch-sidebar-cs-class" data-class="bg-amy-crisp sidebar-text-dark">
+                                        </div>
+                                        <div class="swatch-holder bg-heavy-rain switch-sidebar-cs-class" data-class="bg-heavy-rain sidebar-text-dark">
+                                        </div>
+                                        <div class="swatch-holder bg-mean-fruit switch-sidebar-cs-class" data-class="bg-mean-fruit sidebar-text-dark">
+                                        </div>
+                                        <div class="swatch-holder bg-malibu-beach switch-sidebar-cs-class" data-class="bg-malibu-beach sidebar-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-deep-blue switch-sidebar-cs-class" data-class="bg-deep-blue sidebar-text-dark">
+                                        </div>
+                                        <div class="swatch-holder bg-ripe-malin switch-sidebar-cs-class" data-class="bg-ripe-malin sidebar-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-arielle-smile switch-sidebar-cs-class" data-class="bg-arielle-smile sidebar-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-plum-plate switch-sidebar-cs-class" data-class="bg-plum-plate sidebar-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-happy-fisher switch-sidebar-cs-class" data-class="bg-happy-fisher sidebar-text-dark">
+                                        </div>
+                                        <div class="swatch-holder bg-happy-itmeo switch-sidebar-cs-class" data-class="bg-happy-itmeo sidebar-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-mixed-hopes switch-sidebar-cs-class" data-class="bg-mixed-hopes sidebar-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-strong-bliss switch-sidebar-cs-class" data-class="bg-strong-bliss sidebar-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-grow-early switch-sidebar-cs-class" data-class="bg-grow-early sidebar-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-love-kiss switch-sidebar-cs-class" data-class="bg-love-kiss sidebar-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-premium-dark switch-sidebar-cs-class" data-class="bg-premium-dark sidebar-text-light">
+                                        </div>
+                                        <div class="swatch-holder bg-happy-green switch-sidebar-cs-class" data-class="bg-happy-green sidebar-text-light">
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                        <h3 class="themeoptions-heading">
+                            <div>Main Content Options</div>
+                            <button type="button" class="btn-pill btn-shadow btn-wide ml-auto active btn btn-focus btn-sm">Restore Default
+                            </button>
+                        </h3>
+                        <div class="p-3">
+                            <ul class="list-group">
+                                <li class="list-group-item">
+                                    <h5 class="pb-2">Page Section Tabs
+                                    </h5>
+                                    <div class="theme-settings-swatches">
+                                        <div role="group" class="mt-2 btn-group">
+                                            <button type="button" class="btn-wide btn-shadow btn-primary btn btn-secondary switch-theme-class" data-class="body-tabs-line">
+                                                Line
+                                            </button>
+                                            <button type="button" class="btn-wide btn-shadow btn-primary active btn btn-secondary switch-theme-class" data-class="body-tabs-shadow">
+                                                Shadow
+                                            </button>
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                <div class="ps__rail-x" style="left: 0px; bottom: 0px;"><div class="ps__thumb-x" tabindex="0" style="left: 0px; width: 0px;"></div></div><div class="ps__rail-y" style="top: 0px; height: 754px; right: 0px;"><div class="ps__thumb-y" tabindex="0" style="top: 0px; height: 528px;"></div></div></div>
+            </div>
+        </div>        
+	<div class="app-main">
+    <div class="app-main__outer">
+                    <div class="app-main__inner">
+					</div>
+                        <div class="row">
+                            <div class="col-md-5 col-xl-2">
+                                <div class="card mb-3 widget-content bg-midnight-bloom">
+                                    <div class="widget-content-wrapper text-white">
+                                        <div class="widget-content-left">
+                                            <div class="widget-heading">Total Dissolved Solids</div>
+                                            <div class="widget-subheading">Current TDS</div>
+                                        </div>
+                                        <div class="widget-content-right">
+                                            <div class="widget-numbers text-white"><span id="TDS"></span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-5 col-xl-2">
+                                <div class="card mb-3 widget-content bg-arielle-smile">
+                                    <div class="widget-content-wrapper text-white">
+                                        <div class="widget-content-left">
+                                            <div class="widget-heading">Temperature</div>
+                                            <div class="widget-subheading">Degree Celcius</div>
+                                        </div>
+                                        <div class="widget-content-right">
+                                            <div class="widget-numbers text-white"><span id="Temp"> </span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+							<div class="col-md-5 col-xl-2">
+                                <div class="card mb-3 widget-content bg-premium-dark">
+                                    <div class="widget-content-wrapper text-white">
+                                        <div class="widget-content-left">
+                                            <div class="widget-heading">Water Level</div>
+                                            <div class="widget-subheading">Height of water</div>
+                                        </div>
+                                        <div class="widget-content-right">
+                                            <div class="widget-numbers text-warning"><span id="PH"></span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+							<div class="col-md-5 col-xl-2">
+                                <div class="card mb-3 widget-content bg-premium-dark">
+                                    <div class="widget-content-wrapper text-white">
+                                        <div class="widget-content-left">
+                                            <div class="widget-heading">Ambient Temperature</div>
+                                            <div class="widget-subheading">Degree Celcius</div>
+                                        </div>
+                                        <div class="widget-content-right">
+                                            <div class="widget-numbers text-warning"><span id="AT"></span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+							<div class="col-md-5 col-xl-2">
+                                <div class="card mb-3 widget-content bg-premium-dark">
+                                    <div class="widget-content-wrapper text-white">
+                                        <div class="widget-content-left">
+                                            <div class="widget-heading">Ambient Humidity</div>
+                                            <div class="widget-subheading">Relative Humidity</div>
+                                        </div>
+                                        <div class="widget-content-right">
+                                            <div class="widget-numbers text-warning"><span id="AH"></span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-5 col-xl-2">
+                                <div class="card mb-3 widget-content bg-grow-early">
+                                    <div class="widget-content-wrapper text-white">
+                                        <div class="widget-content-left">
+                                            <div class="widget-heading">Last Update</div>
+                                            <div class="widget-subheading"></div>
+                                        </div>
+                                        <div class="widget-content-right">
+                                            <div class="widget-numbers text-white"><span id="Time"></span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+						<div class="row">
+                            <div class="col-md-6 col-xl-2">
+                                <div class="card mb-3 widget-content">
+                                    <div class="widget-content-outer">
+                                        <div class="widget-content-wrapper">
+                                            <div class="widget-content-left">
+                                                <div class="widget-heading">Feed</div>
+                                                <div class="widget-subheading" id="feed">Click to Feed</div>
+                                            </div>
+                                            <div class="widget-content-right">                                                
+												<button type="button" class="btn btn-success" onclick="feed()" >Feed</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-xl-2">
+                                <div class="card mb-3 widget-content">
+                                    <div class="widget-content-outer">
+                                        <div class="widget-content-wrapper">
+                                            <div class="widget-content-left">
+                                                <div class="widget-heading">Last Fed</div>
+                                                <div class="widget-subheading">Click Feed to update</div>
+                                            </div>
+                                            <div class="widget-content-right">
+                                                <div class="widget-numbers text-warning" id="updatefeed"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+							<div class="col-md-6 col-xl-2">
+                                <div class="card mb-3 widget-content">
+                                    <div class="widget-content-outer">
+                                        <div class="widget-content-wrapper">
+                                            <div class="widget-content-left">
+                                                <div class="widget-heading">Refill</div>
+                                                <div class="widget-subheading" id="feed">Click to Refill</div>
+                                            </div>
+                                            <div class="widget-content-right">                                                
+												<button type="button" class="btn btn-success" onclick="refill()" >Refill</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+							<div class="col-md-6 col-xl-2">
+                                <div class="card mb-3 widget-content">
+                                    <div class="widget-content-outer">
+                                        <div class="widget-content-wrapper">
+										    <div class="widget-content-left">
+                                                <div class="widget-heading">Refill</div>
+                                                <div class="widget-subheading">Duration:</div>
+                                            </div>
+                                            <div class="widget-content-right">                                                
+												<input type="text" class="form-control" pattern="[0-9]" id="value">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-xl-2">
+                                <div class="card mb-3 widget-content">
+                                    <div class="widget-content-outer">
+                                        <div class="widget-content-wrapper">
+                                            <div class="widget-content-left">
+                                                <div class="widget-heading">Last Refill</div>
+                                                <div class="widget-subheading"></div>
+                                            </div>
+                                            <div class="widget-content-right">
+                                                <div class="widget-numbers text-warning" id="lastrefill"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+							
+                            <div class="col-md-6 col-xl-2">
+                                <div class="card mb-3 widget-content">
+                                    <div class="widget-content-outer">
+                                        <div class="widget-content-wrapper">
+                                            <div class="widget-content-left">
+                                                <div class="widget-heading">Detected at:</div>
+                                                <div id="anomalytext2" class="widget-subheading"></div>
+                                            </div>
+                                            <div class="widget-content-right">
+                                                <div id="anomalydate"class="widget-numbers text-danger"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+						<div class="row">
+							<div class="col-md-12 col-lg-6">
+                                <div class="mb-3 card">
+                                    <div class="card-header-tab card-header-tab-animation card-header">
+                                        <div class="card-header-title">
+                                            <i class="header-icon lnr-apartment icon-gradient bg-love-kiss"> </i>
+                                            Temperature
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="tab-content">
+                                            <div class="tab-pane fade show active" id="tabs-eg-77">
+                                                <div class="card mb-3 widget-chart widget-chart2 text-left w-100">
+                                                    <div class="widget-chat-wrapper-outer">
+                                                        <div class="widget-chart-wrapper widget-chart-wrapper-lg opacity-10 m-0"><div class="chartjs-size-monitor" style="position: absolute; left: 0px; top: 0px; right: 0px; bottom: 0px; overflow: hidden; pointer-events: none; visibility: hidden; z-index: -1;"><div class="chartjs-size-monitor-expand" style="position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;visibility:hidden;z-index:-1;"><div style="position:absolute;width:1000000px;height:1000000px;left:0;top:0"></div></div><div class="chartjs-size-monitor-shrink" style="position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;visibility:hidden;z-index:-1;"><div style="position:absolute;width:200%;height:200%;left:0; top:0"></div></div></div>
+                                                            <canvas id="canvas1" width="542" height="271" class="chartjs-render-monitor" style="display: block; height: 217px; width: 434px;"></canvas>
+                                                        </div>
+                                                    </div>
+                                                </div>   
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+							<div class="col-md-12 col-lg-6">
+                                <div class="mb-3 card">
+                                    <div class="card-header-tab card-header-tab-animation card-header">
+                                        <div class="card-header-title">
+                                            <i class="header-icon lnr-apartment icon-gradient bg-love-kiss"> </i>
+                                            <div id = "anomalytext"></div>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="tab-content">
+                                            <div class="tab-pane fade show active" id="tabs-eg-77">
+                                                <div class="card mb-3 widget-chart widget-chart2 text-left w-100">
+                                                    <div class="widget-chat-wrapper-outer">
+                                                        <div class="widget-chart-wrapper widget-chart-wrapper-lg opacity-10 m-0"><div class="chartjs-size-monitor" style="position: absolute; left: 0px; top: 0px; right: 0px; bottom: 0px; overflow: hidden; pointer-events: none; visibility: hidden; z-index: -1;"><div class="chartjs-size-monitor-expand" style="position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;visibility:hidden;z-index:-1;"><div style="position:absolute;width:1000000px;height:1000000px;left:0;top:0"></div></div><div class="chartjs-size-monitor-shrink" style="position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;visibility:hidden;z-index:-1;"><div style="position:absolute;width:200%;height:200%;left:0; top:0"></div></div></div>
+                                                            <img width="542" height="271" id="image" src="" style="display: block; margin-left:auto; margin-right:auto;">
+                                                        </div>
+                                                    </div>
+                                                </div>   
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+							</div>
+                        <div class="row">
+                            <div class="col-md-12 col-lg-6">
+                                <div class="mb-3 card">
+                                    <div class="card-header-tab card-header-tab-animation card-header">
+                                        <div class="card-header-title">
+                                            <i class="header-icon lnr-apartment icon-gradient bg-love-kiss"> </i>
+                                            TDS
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="tab-content">
+                                            <div class="tab-pane fade show active" id="tabs-eg-77">
+                                                <div class="card mb-3 widget-chart widget-chart2 text-left w-100">
+                                                    <div class="widget-chat-wrapper-outer">
+                                                        <div class="widget-chart-wrapper widget-chart-wrapper-lg opacity-10 m-0"><div class="chartjs-size-monitor" style="position: absolute; left: 0px; top: 0px; right: 0px; bottom: 0px; overflow: hidden; pointer-events: none; visibility: hidden; z-index: -1;"><div class="chartjs-size-monitor-expand" style="position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;visibility:hidden;z-index:-1;"><div style="position:absolute;width:1000000px;height:1000000px;left:0;top:0"></div></div><div class="chartjs-size-monitor-shrink" style="position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;visibility:hidden;z-index:-1;"><div style="position:absolute;width:200%;height:200%;left:0; top:0"></div></div></div>
+                                                            <canvas id="canvas3" width="542" height="271" class="chartjs-render-monitor" style="display: block; height: 217px; width: 434px;"></canvas>
+                                                        </div>
+                                                    </div>
+                                                </div>   
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+							<div class="col-md-12 col-lg-6">
+                                <div class="mb-3 card">
+                                    <div class="card-header-tab card-header-tab-animation card-header">
+                                        <div class="card-header-title">
+                                            <i class="header-icon lnr-apartment icon-gradient bg-love-kiss"> </i>
+                                            Water Level
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="tab-content">
+                                            <div class="tab-pane fade show active" id="tabs-eg-77">
+                                                <div class="card mb-3 widget-chart widget-chart2 text-left w-100">
+                                                    <div class="widget-chat-wrapper-outer">
+                                                        <div class="widget-chart-wrapper widget-chart-wrapper-lg opacity-10 m-0"><div class="chartjs-size-monitor" style="position: absolute; left: 0px; top: 0px; right: 0px; bottom: 0px; overflow: hidden; pointer-events: none; visibility: hidden; z-index: -1;"><div class="chartjs-size-monitor-expand" style="position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;visibility:hidden;z-index:-1;"><div style="position:absolute;width:1000000px;height:1000000px;left:0;top:0"></div></div><div class="chartjs-size-monitor-shrink" style="position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;visibility:hidden;z-index:-1;"><div style="position:absolute;width:200%;height:200%;left:0; top:0"></div></div></div>
+                                                            <canvas id="canvas2" width="542" height="271" class="chartjs-render-monitor" style="display: block; height: 217px; width: 434px;"></canvas>
+                                                        </div>
+                                                    </div>
+                                                </div>   
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            </div>
+							<div class="row">
+                            <div class="col-md-12 col-lg-6">
+                                <div class="mb-3 card">
+                                    <div class="card-header-tab card-header-tab-animation card-header">
+                                        <div class="card-header-title">
+                                            <i class="header-icon lnr-apartment icon-gradient bg-love-kiss"> </i>
+                                            Ambient Temperature
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="tab-content">
+                                            <div class="tab-pane fade show active" id="tabs-eg-77">
+                                                <div class="card mb-3 widget-chart widget-chart2 text-left w-100">
+                                                    <div class="widget-chat-wrapper-outer">
+                                                        <div class="widget-chart-wrapper widget-chart-wrapper-lg opacity-10 m-0"><div class="chartjs-size-monitor" style="position: absolute; left: 0px; top: 0px; right: 0px; bottom: 0px; overflow: hidden; pointer-events: none; visibility: hidden; z-index: -1;"><div class="chartjs-size-monitor-expand" style="position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;visibility:hidden;z-index:-1;"><div style="position:absolute;width:1000000px;height:1000000px;left:0;top:0"></div></div><div class="chartjs-size-monitor-shrink" style="position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;visibility:hidden;z-index:-1;"><div style="position:absolute;width:200%;height:200%;left:0; top:0"></div></div></div>
+                                                            <canvas id="canvas4" width="542" height="271" class="chartjs-render-monitor" style="display: block; height: 217px; width: 434px;"></canvas>
+                                                        </div>
+                                                    </div>
+                                                </div>   
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+							<div class="col-md-12 col-lg-6">
+                                <div class="mb-3 card">
+                                    <div class="card-header-tab card-header-tab-animation card-header">
+                                        <div class="card-header-title">
+                                            <i class="header-icon lnr-apartment icon-gradient bg-love-kiss"> </i>
+                                            Ambient Humidity
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="tab-content">
+                                            <div class="tab-pane fade show active" id="tabs-eg-77">
+                                                <div class="card mb-3 widget-chart widget-chart2 text-left w-100">
+                                                    <div class="widget-chat-wrapper-outer">
+                                                        <div class="widget-chart-wrapper widget-chart-wrapper-lg opacity-10 m-0"><div class="chartjs-size-monitor" style="position: absolute; left: 0px; top: 0px; right: 0px; bottom: 0px; overflow: hidden; pointer-events: none; visibility: hidden; z-index: -1;"><div class="chartjs-size-monitor-expand" style="position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;visibility:hidden;z-index:-1;"><div style="position:absolute;width:1000000px;height:1000000px;left:0;top:0"></div></div><div class="chartjs-size-monitor-shrink" style="position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;visibility:hidden;z-index:-1;"><div style="position:absolute;width:200%;height:200%;left:0; top:0"></div></div></div>
+                                                            <canvas id="canvas5" width="542" height="271" class="chartjs-render-monitor" style="display: block; height: 217px; width: 434px;"></canvas>
+                                                        </div>
+                                                    </div>
+                                                </div>   
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            </div>
+                        <!--</div> -->
+                        
+                        <div class="row">
+                            <div class="col-md-12">
+                                
+                            </div>
+                        </div>
+                      
+                    </div>
+	</div>
+</body>
+</html>
